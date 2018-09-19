@@ -20,7 +20,7 @@ public class AdminItemData {
     }
 
     public String getEncodedKey(){
-        return key;
+        return encoder(key);
     }
 
 //    @Exclude
@@ -42,7 +42,7 @@ public class AdminItemData {
     }
 
     public String encoder(String s){
-        return s.replace(".", ", ");
+        return s.replace(".", ",");
     }
 
     public String decoder(String s){

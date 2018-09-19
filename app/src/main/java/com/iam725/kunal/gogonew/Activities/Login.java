@@ -26,6 +26,7 @@ import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
@@ -143,23 +144,31 @@ public class Login extends AppCompatActivity {
 //                                        @Override
 //                                        public void onComplete(@NonNull Task<Void> task) {
 //                                            if (task.isSuccessful()) {
-                            if(email.matches(emailPattern)){
+                            if(android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()){
                                 email = email.replace(".", ",");
                                 Log.d(TAG, "Request sent.");
+                                if(!isInternetOn()){
+                                    Toast.makeText(Login.this, "Error Occurred", Toast.LENGTH_SHORT).show();
+                                }
                                     requestDatabaseReference.child(email).setValue("Pending")
                                             .addOnCompleteListener(new OnCompleteListener<Void>() {
                                                 @Override
                                                 public void onComplete(@NonNull Task<Void> task) {
-                                                    if(task.isSuccessful()){
+                                                    if (task.isSuccessful()) {
                                                         Log.d(TAG, "Request sent1");
                                                         Toast.makeText(Login.this, "Request sent", Toast.LENGTH_SHORT).show();
-                                                    }
-                                                    else{
-                                                        Log.d(TAG, "Request Failed");
+                                                    } else {
+                                                        Log.d(TAG, "Request Failed1");
                                                         Toast.makeText(Login.this, "Error Occurred", Toast.LENGTH_SHORT).show();
                                                     }
                                                 }
-                                            });
+                                            }).addOnFailureListener(new OnFailureListener() {
+                                        @Override
+                                        public void onFailure(@NonNull Exception e) {
+                                            Log.d(TAG, "Request Failed");
+                                            Toast.makeText(Login.this, "Error Occurred", Toast.LENGTH_SHORT).show();
+                                        }
+                                    });
                             }
                             else{
                                 Toast.makeText(Login.this, "Invalid email id", Toast.LENGTH_SHORT).show();

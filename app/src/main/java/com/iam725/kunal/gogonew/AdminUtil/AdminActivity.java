@@ -21,6 +21,7 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthUserCollisionException;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -116,10 +117,12 @@ implements AdminRecyclerAdapter.AdminClickListener{
                 String email = dataSnapshot.getKey();
                 String status = (String)dataSnapshot.getValue();
                 Log.v("AdminActivity", "Status Approved1"+status);
+                assert status != null;
                 if(status.toLowerCase().equals("approved")){
                     Log.v("AdminActivity", "Status Approved2"+status);
                     UserListItem userListItem = new UserListItem(email, false);
-                    userListDatabaseReference.child(map.get(userListItem.getEmail())).setValue(userListItem);
+//                    userListDatabaseReference.child(map.get(userListItem.getEmail())).setValue(userListItem);   //using uid as key
+                    userListDatabaseReference.child(userListItem.getEncodedEmail()).setValue(userListItem);   //using email as key
                 }
             }
 
@@ -147,7 +150,7 @@ implements AdminRecyclerAdapter.AdminClickListener{
                 snackbar.setAction(R.string.undo_string, new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        mDatabaseReference.child(tempAdminItemData.getKey()).setValue(tempAdminItemData.getRequest());
+                        mDatabaseReference.child(tempAdminItemData.getEncodedKey()).setValue(tempAdminItemData.getRequest());
                     }
                 });
                 snackbar.show();
@@ -175,36 +178,31 @@ implements AdminRecyclerAdapter.AdminClickListener{
                 Log.v("AdminActivity", "CHECK_ACTION"+arrayList.get(pos).getKey());
                 Toast.makeText(this, "Approving", Toast.LENGTH_SHORT).show();
                 final String password = GenerateRandomPassword.randomString(4);
+                Log.v("AdminActivity", arrayList.get(pos).toString());
                 auth.createUserWithEmailAndPassword(arrayList.get(pos).getKey(),password)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
-                        if(pos>arrayList.size()) return;
+//                        if(pos>arrayList.size()) return;
                         if(task.isSuccessful()){
                             Log.v("AdminActivity", "UserAuthenticated1"+password);
-//                            UserListItem userListItem = new UserListItem(arrayList.get(pos).getEncodedKey(), false);
-//                            arrayList.get(pos).setPassword(password);
-                            uid = auth.getCurrentUser().getUid();
+//                            uid = auth.getCurrentUser().getUid();
+                            FirebaseUser user = auth.getCurrentUser();
                             String to = arrayList.get(pos).getKey();
-                            map.put(to, uid);
+                            auth.sendPasswordResetEmail(to);
+//                            map.put(to, uid);
                             Log.v("AdminActivity", "UserAuthenticated2"+uid);
-//                            String password = arrayList.get(pos).getPassword();
-                            String subject = "Login Credentials for GoGo";
-                            String message = "Login Credentials for GoGo\n Email-id: "+to+"\nPassword: "+password;;
-                            Intent email = new Intent(Intent.ACTION_SEND);
-                            email.putExtra(Intent.EXTRA_EMAIL, new String[]{to});
-                            email.putExtra(Intent.EXTRA_SUBJECT, subject);
-                            email.putExtra(Intent.EXTRA_TEXT, message);
-                            email.setType("message/rfc822");
-                            startActivity(Intent.createChooser(email, "Choose an Email client :"));
                             mDatabaseReference.child(arrayList.get(pos).getEncodedKey()).setValue("Approved");
                         }
                         else {
-                            Log.v("AdminActivity", "UserNotAuthenticated");
+                            Log.v("AdminActivity", "UserNotAuthenticated4");
                             if(task.getException()instanceof FirebaseAuthUserCollisionException){
                                 Log.v("AdminActivity", "UserNotAuthenticated1");
                                 uid = auth.getCurrentUser().getUid();
-                                mDatabaseReference.child(arrayList.get(pos).getEncodedKey())
+                                AdminItemData adminItemData = null;
+                                if(pos<arrayList.size()) adminItemData = arrayList.get(pos);
+                                if(adminItemData == null) return;
+                                mDatabaseReference.child(adminItemData.getEncodedKey())
                                         .addListenerForSingleValueEvent(new ValueEventListener() {
                                             @Override
                                             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -214,14 +212,14 @@ implements AdminRecyclerAdapter.AdminClickListener{
                                                     Toast.makeText(AdminActivity.this, "Connection failed, try again", Toast.LENGTH_SHORT).show();
                                                     return;
                                                 }
-                                                map.put(arrayList.get(pos).getKey(), uid);
+//                                                map.put(arrayList.get(pos).getKey(), uid);
                                                 if(status.toLowerCase().equals("approved")){
                                                     Log.v("AdminActivity", "UserNotAuthenticated4");
                                                     UserListItem userListItem = new UserListItem(arrayList.get(pos).getEncodedKey(), false);
-                                                    uid = auth.getCurrentUser().getUid();
-                                                    userListDatabaseReference.child(uid).setValue(userListItem);
+//                                                    uid = auth.getCurrentUser().getUid();
+                                                    userListDatabaseReference.child(arrayList.get(pos).getEncodedKey()).setValue(userListItem);
                                                     Log.v("AdminActivity", "UserNotAuthenticated5"+dataSnapshot.getKey());
-                                                    mDatabaseReference.child((String)(dataSnapshot.getKey())).removeValue();
+                                                    mDatabaseReference.child(dataSnapshot.getKey()).removeValue();
                                                 }
                                                 else{
                                                     Log.v("AdminActivity", "UserNotAuthenticated3");

@@ -88,6 +88,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 
 import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -648,9 +649,13 @@ public class MapsActivity extends AppCompatActivity
     }
 
     private void resetPassword() {
-
+        FirebaseAuth mAuth = FirebaseAuth.getInstance();
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+        String email = currentUser.getEmail();
+        Log.v("Firebase Email", email);
         new AlertDialog.Builder(this)
                 .setIcon(android.R.drawable.ic_dialog_alert)
+
                 .setTitle("Reset Password")
                 .setMessage("Are you sure you want to reset your password ?")
                 .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
@@ -1502,6 +1507,8 @@ public class MapsActivity extends AppCompatActivity
         }
         FirebaseAuth mAuth = FirebaseAuth.getInstance();
         FirebaseUser currentUser = mAuth.getCurrentUser();
+//        String email = currentUser.getEmail();
+//        Log.v("Firebase Email1", email);
         Log.d(TAG, "currentUser = " + currentUser);
         if (currentUser == null) {
             Intent i = new Intent(MapsActivity.this, Login.class);
@@ -1669,6 +1676,13 @@ public class MapsActivity extends AppCompatActivity
 
     }
 
+    public String encoder(String s){
+        return s.replace(".", ",");
+    }
+    public String decoder(String s){
+        return s.replace(",", ".");
+    }
+
     private void saveIsAdmin(final SharedPreferences loginPrefs){
         //Show Admin option in drawer
         Log.v(TAG,"LoadingIsAdmin");
@@ -1676,7 +1690,10 @@ public class MapsActivity extends AppCompatActivity
         DatabaseReference userListDatabaseReference = firebaseDatabase.getReference().child("userList");
         final String uid = loginPrefs.getString("uid", "1234");
         if(FirebaseAuth.getInstance() != null) {
-            userListDatabaseReference.child(FirebaseAuth.getInstance().getCurrentUser().getUid())
+            Log.v(TAG, "authIsNotNull");
+            String email = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getEmail();
+            Log.v(TAG, "email = "+email);
+            userListDatabaseReference.child(encoder(email))
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {

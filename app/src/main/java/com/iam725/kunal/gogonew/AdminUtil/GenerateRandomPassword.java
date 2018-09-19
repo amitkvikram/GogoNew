@@ -4,7 +4,7 @@ import java.util.Random;
 import java.util.UUID;
 
 public class GenerateRandomPassword {
-    public static final String DATA = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    public static final String DATA = "0t12cd3s456%789A$BCDEFabsGHIJK@LMNOP#QRSTUVWXYZ";
     public static Random RANDOM = new Random();
 
     public static String randomString(int len) {

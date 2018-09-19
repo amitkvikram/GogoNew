@@ -18,7 +18,7 @@ public class UserListItem {
 
     @Exclude
     public String getEncodedEmail(){
-        return email;
+        return encoder(email);
     }
 
     public boolean isAdmin() {
@@ -34,7 +34,7 @@ public class UserListItem {
     }
 
     public String encoder(String s){
-        return s.replace(".", ", ");
+        return s.replace(".", ",");
     }
 
     public String decoder(String s){
